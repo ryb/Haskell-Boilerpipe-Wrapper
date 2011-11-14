@@ -24,5 +24,4 @@ boilerpipe :: String -> IO (Maybe String)
 boilerpipe txt = do
     defaultJarPath <- getDataFileName
         "boilerpipe-core/dist/boilerpipe-1.1-dev.jar"
-    print defaultJarPath
     boilerpipeFromJarPath defaultJarPath txt

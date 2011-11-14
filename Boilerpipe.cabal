@@ -7,7 +7,7 @@ Name:                Boilerpipe
 -- The package version. See the Haskell package versioning policy
 -- (http://www.haskell.org/haskellwiki/Package_versioning_policy) for
 -- standards guiding when and how versions should be incremented.
-Version:             0.2
+Version:             0.2.2
 
 -- A short (one-line) description of the package.
 -- Synopsis:            
@@ -42,7 +42,9 @@ Build-type:          Simple
 -- Constraint on the version of Cabal needed to build this package.
 Cabal-version:       >=1.2
 
-Data-Files: boilerpipe-core/dist/boilerpipe-1.1-dev.jar
+Data-Files: boilerpipe-core/dist/boilerpipe-1.1-dev.jar,
+            boilerpipe-core/lib/nekohtml-1.9.13.jar,
+            boilerpipe-core/lib/xerces-2.9.1.jar
 
 Library
   -- Modules exported by the library.
@@ -52,7 +54,7 @@ Library
   Build-depends: base, process, temporary, strict
   
   -- Modules not exported by this package.
-  -- Other-modules:       
+  Other-modules: Paths_Boilerpipe
   
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
   -- Build-tools:         
