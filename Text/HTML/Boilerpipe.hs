@@ -1,11 +1,19 @@
-module Text.HTML.Boilerpipe where
+module Text.HTML.Boilerpipe (boilerpipe, boilerpipeFromJarPath) where
 
+import Codec.Text.IConv
+import Data.ByteString.Lazy.UTF8 (fromString, toString)
 import System.Cmd
 import System.Exit
 import System.IO
 import System.IO.Temp
-import qualified System.IO.Strict as Strict
 import Paths_Boilerpipe
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BL
+
+toUtf8 = toString . convert "LATIN1" "UTF-8" . toLazyByteString
+
+toLazyByteString bs = BL.fromChunks [bs]
+toStrictByteString bs = BS.concat $ BL.toChunks bs
 
 boilerpipeFromJarPath :: FilePath -> String -> IO (Maybe String)
 boilerpipeFromJarPath boilerpipePath txt = do
@@ -16,8 +24,8 @@ boilerpipeFromJarPath boilerpipePath txt = do
             hPutStr inHandle txt
             r <- rawSystem "java" ["-jar", boilerpipePath, inPath, outPath]
             case r of
-                ExitSuccess -> Strict.hGetContents outHandle >>=
-                    \t -> return $ Just t
+                ExitSuccess -> BS.hGetContents outHandle >>=
+                    \t -> return $ Just $ toUtf8 t
                 ExitFailure _ -> return Nothing
 
 boilerpipe :: String -> IO (Maybe String)
