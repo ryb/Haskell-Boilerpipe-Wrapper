@@ -2,8 +2,10 @@ package com.thoughtleadr.boilerpipe;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.InputStreamReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.OutputStreamWriter;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Scanner;
@@ -23,23 +25,27 @@ class BoilerpipeCLI {
     writeFile(outputFilePath, output);
   }
   
-  private static void writeFile( String file, String contents) throws IOException {
+  private static void writeFile(String file, String contents) throws IOException {
 	  BufferedWriter writer = null;
       try{
-    	  writer = new BufferedWriter( new FileWriter( file));
-          writer.write( contents);
+          FileOutputStream fos = new FileOutputStream(file);
+          OutputStreamWriter osw = new OutputStreamWriter(fos, "UTF-8");
+    	  writer = new BufferedWriter(osw);
+          writer.write(contents);
       }
-      catch ( IOException e){}
+      catch (IOException e){}
       finally{
     	  try{
-    		  if ( writer != null)
+    		  if (writer != null)
     			  writer.close( );
-          }catch ( IOException e){}
+          }catch (IOException e){}
       }
   }
   
   private static String readFile( String file ) throws IOException {
-	    BufferedReader reader = new BufferedReader( new FileReader (file));
+        InputStreamReader isw =
+            new InputStreamReader(new FileInputStream(file), "UTF-8");
+	    BufferedReader reader = new BufferedReader(isw);
 	    String line  = null;
 	    StringBuilder stringBuilder = new StringBuilder();
 	    String ls = System.getProperty("line.separator");

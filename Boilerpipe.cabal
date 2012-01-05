@@ -51,7 +51,7 @@ Library
   Exposed-modules:     Text.HTML.Boilerpipe
   
   -- Packages needed in order to build this package.
-  Build-depends: base, bytestring, iconv, process, temporary, utf8-string
+  Build-depends: base, process, strict, temporary
   
   -- Modules not exported by this package.
   Other-modules: Paths_Boilerpipe
