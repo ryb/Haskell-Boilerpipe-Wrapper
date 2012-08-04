@@ -7,13 +7,13 @@ Name:                Boilerpipe
 -- The package version. See the Haskell package versioning policy
 -- (http://www.haskell.org/haskellwiki/Package_versioning_policy) for
 -- standards guiding when and how versions should be incremented.
-Version:             0.3
+Version:             0.4
 
 -- A short (one-line) description of the package.
--- Synopsis:            
+-- Synopsis:
 
 -- A longer description of the package.
--- Description:         
+-- Description:
 
 -- The license under which the package is released.
 License:             BSD3
@@ -29,7 +29,7 @@ Author:              Ryan Burton
 Maintainer:          ryan@thoughtleadr.com
 
 -- A copyright notice.
--- Copyright:           
+-- Copyright:
 
 Category:            Text
 
@@ -37,7 +37,7 @@ Build-type:          Simple
 
 -- Extra files to be distributed with the package, such as examples or
 -- a README.
--- Extra-source-files:  
+-- Extra-source-files:
 
 -- Constraint on the version of Cabal needed to build this package.
 Cabal-version:       >=1.2
@@ -49,13 +49,13 @@ Data-Files: boilerpipe-core/dist/boilerpipe-1.1-dev.jar,
 Library
   -- Modules exported by the library.
   Exposed-modules:     Text.HTML.Boilerpipe
-  
+
   -- Packages needed in order to build this package.
-  Build-depends: base, process, strict, temporary
-  
+  Build-depends: base, filepath, process, strict, system-uuid, temporary
+
   -- Modules not exported by this package.
   Other-modules: Paths_Boilerpipe
-  
+
   -- Extra tools (e.g. alex, hsc2hs, ...) needed to build the source.
-  -- Build-tools:         
-  
+  -- Build-tools:
+
