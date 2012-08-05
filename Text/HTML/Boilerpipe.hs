@@ -14,11 +14,15 @@ boilerpipeFromJarPath boilerpipePath txt = do
     withSystemTempDirectory "boilerpipe" $ \tempDirPath -> do
         inPath <- fmap ((tempDirPath </>) . show) uuid
         outPath <- fmap ((tempDirPath </>) . show) uuid
-        writeFile inPath txt
+        withFile inPath WriteMode $ \h -> do
+            hSetEncoding h utf8
+            hPutStr h txt
         r <- rawSystem "java" ["-jar", boilerpipePath, inPath, outPath]
         case r of
-            ExitSuccess -> Strict.readFile outPath >>=
-                \t -> return $ Just t
+            ExitSuccess -> withFile outPath ReadMode $ \h -> do
+                hSetEncoding h utf8
+                t <- Strict.hGetContents h
+                return $ Just t
             ExitFailure _ -> return Nothing
 
 boilerpipe :: String -> IO (Maybe String)
