@@ -51,7 +51,12 @@ Library
   Exposed-modules:     Text.HTML.Boilerpipe
 
   -- Packages needed in order to build this package.
-  Build-depends: base, filepath, process, strict, system-uuid, temporary
+  Build-depends: base, 
+                 filepath, 
+                 process, 
+                 strict, 
+                 system-uuid, 
+                 temporary
 
   -- Modules not exported by this package.
   Other-modules: Paths_Boilerpipe
