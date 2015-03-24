@@ -1,6 +1,6 @@
 module Text.HTML.Boilerpipe (boilerpipe, boilerpipeFromJarPath) where
 
-import System.Cmd
+import System.Process
 import System.Exit
 import System.FilePath
 import System.IO
