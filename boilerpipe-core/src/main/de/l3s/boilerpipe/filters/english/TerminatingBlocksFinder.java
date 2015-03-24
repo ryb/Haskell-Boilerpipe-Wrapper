@@ -68,10 +68,15 @@ public class TerminatingBlocksFinder implements BoilerpipeFilter {
 							|| textLC.contains("reader views")
 							|| textLC.contains("have your say")
 							|| textLC.contains("reader comments")
+							|| textLC.contains("rätta artikeln")
 							|| textLC
 									.equals("thanks for your comments - this feedback is now closed")) {
 						tb.addLabel(DefaultLabels.INDICATES_END_OF_TEXT);
 						changes = true;
+					}
+				} else if(tb.getLinkDensity() == 1.0) {
+					if(text.equals("Comment")) {
+						tb.addLabel(DefaultLabels.INDICATES_END_OF_TEXT);
 					}
 				}
 			}

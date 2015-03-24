@@ -23,6 +23,9 @@ import java.net.URL;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.xerces.parsers.AbstractSAXParser;
 import org.cyberneko.html.HTMLConfiguration;
@@ -45,6 +48,8 @@ import de.l3s.boilerpipe.document.TextDocument;
  */
 public final class HTMLHighlighter {
 
+	private Map<String, Set<String>> tagWhitelist = null;
+
 	/**
 	 * Creates a new {@link HTMLHighlighter}, which is set-up to return the full
 	 * HTML text, with the extracted text portion <b>highlighted</b>.
@@ -64,7 +69,12 @@ public final class HTMLHighlighter {
 	private HTMLHighlighter(final boolean extractHTML) {
 		if (extractHTML) {
 			setOutputHighlightOnly(true);
-			setExtraStyleSheet("");
+			setExtraStyleSheet("\n<style type=\"text/css\">\n"
+					+ "A:before { content:' '; } \n" //
+					+ "A:after { content:' '; } \n" //
+					+ "SPAN:before { content:' '; } \n" //
+					+ "SPAN:after { content:' '; } \n" //
+					+ "</style>\n");
 			setPreHighlight("");
 			setPostHighlight("");
 		}
@@ -78,6 +88,7 @@ public final class HTMLHighlighter {
 	 *            The processed {@link TextDocument}.
 	 * @param origHTML
 	 *            The original HTML document.
+	 * @return The highlighted HTML.
 	 * @throws BoilerpipeProcessingException
 	 */
 	public String process(final TextDocument doc, final String origHTML)
@@ -93,6 +104,7 @@ public final class HTMLHighlighter {
 	 *            The processed {@link TextDocument}.
 	 * @param is
 	 *            The original HTML document.
+	 * @return The highlighted HTML.
 	 * @throws BoilerpipeProcessingException
 	 */
 	public String process(final TextDocument doc, final InputSource is)
@@ -100,9 +112,46 @@ public final class HTMLHighlighter {
 		final Implementation implementation = new Implementation();
 		implementation.process(doc, is);
 
-		return implementation.html.toString();
+		String html = implementation.html.toString();
+		if (outputHighlightOnly) {
+			Matcher m;
+
+			boolean repeat = true;
+			while (repeat) {
+				repeat = false;
+				m = PAT_TAG_NO_TEXT.matcher(html);
+				if (m.find()) {
+					repeat = true;
+					html = m.replaceAll("");
+				}
+
+				m = PAT_SUPER_TAG.matcher(html);
+				if (m.find()) {
+					repeat = true;
+					html = m.replaceAll(m.group(1));
+				}
+			}
+		}
+
+		return html;
 	}
 
+	private static final Pattern PAT_TAG_NO_TEXT = Pattern
+			.compile("<[^/][^>]*></[^>]*>");
+	private static final Pattern PAT_SUPER_TAG = Pattern
+			.compile("^<[^>]*>(<.*?>)</[^>]*>$");
+
+	/**
+	 * Fetches the given {@link URL} using {@link HTMLFetcher} and processes the
+	 * retrieved HTML using the specified {@link BoilerpipeExtractor}.
+	 * 
+	 * @param doc
+	 *            The processed {@link TextDocument}.
+	 * @param is
+	 *            The original HTML document.
+	 * @return The highlighted HTML.
+	 * @throws BoilerpipeProcessingException
+	 */
 	public String process(final URL url, final BoilerpipeExtractor extractor)
 			throws IOException, BoilerpipeProcessingException, SAXException {
 		final HTMLDocument htmlDoc = HTMLFetcher.fetch(url);
@@ -230,21 +279,28 @@ public final class HTMLHighlighter {
 	};
 
 	private static final TagAction TA_HEAD = new TagAction() {
+		void beforeStart(final Implementation instance, final String localName) {
+			instance.inIgnorableElement++;
+		}
 
 		void beforeEnd(final Implementation instance, String localName) {
 			instance.html.append(instance.hl.extraStyleSheet);
 		}
-	};
 
+		void afterEnd(final Implementation instance, final String localName) {
+			instance.inIgnorableElement--;
+		}
+	};
 	private static Map<String, TagAction> TAG_ACTIONS = new HashMap<String, TagAction>();
 	static {
 		TAG_ACTIONS.put("STYLE", TA_IGNORABLE_ELEMENT);
 		TAG_ACTIONS.put("SCRIPT", TA_IGNORABLE_ELEMENT);
 		TAG_ACTIONS.put("OPTION", TA_IGNORABLE_ELEMENT);
-		// TAG_ACTIONS.put("NOSCRIPT", TA_IGNORABLE_ELEMENT);
+		TAG_ACTIONS.put("NOSCRIPT", TA_IGNORABLE_ELEMENT);
 		TAG_ACTIONS.put("OBJECT", TA_IGNORABLE_ELEMENT);
 		TAG_ACTIONS.put("EMBED", TA_IGNORABLE_ELEMENT);
 		TAG_ACTIONS.put("APPLET", TA_IGNORABLE_ELEMENT);
+		// NOTE: you might want to comment this out:
 		TAG_ACTIONS.put("LINK", TA_IGNORABLE_ELEMENT);
 
 		TAG_ACTIONS.put("HEAD", TA_HEAD);
@@ -314,28 +370,57 @@ public final class HTMLHighlighter {
 				ta.beforeStart(this, localName);
 			}
 
+			// HACK: remove existing highlight
+			boolean ignoreAttrs = false;
+			if ("SPAN".equalsIgnoreCase(localName)) {
+				String classVal = atts.getValue("class");
+				if ("x-boilerpipe-mark1".equals(classVal)) {
+					ignoreAttrs = true;
+				}
+			}
+
 			try {
 				if (inIgnorableElement == 0) {
 					if (outputHighlightOnly) {
-						boolean highlight = contentBitSet
-								.get(characterElementIdx);
+						// boolean highlight = contentBitSet
+						// .get(characterElementIdx);
 
-						if (!highlight) {
+						// if (!highlight) {
+						// return;
+						// }
+					}
+
+					final Set<String> whitelistAttributes;
+					if (tagWhitelist == null) {
+						whitelistAttributes = null;
+					} else {
+						whitelistAttributes = tagWhitelist.get(qName);
+						if (whitelistAttributes == null) {
+							// skip
 							return;
 						}
 					}
 
 					html.append('<');
 					html.append(qName);
-					final int numAtts = atts.getLength();
-					for (int i = 0; i < numAtts; i++) {
-						final String attr = atts.getQName(i);
-						final String value = atts.getValue(i);
-						html.append(' ');
-						html.append(attr);
-						html.append("=\"");
-						html.append(xmlEncode(value));
-						html.append("\"");
+					if (!ignoreAttrs) {
+						final int numAtts = atts.getLength();
+						for (int i = 0; i < numAtts; i++) {
+							final String attr = atts.getQName(i);
+
+							if (whitelistAttributes != null
+									&& !whitelistAttributes.contains(attr)) {
+								// skip
+								continue;
+							}
+
+							final String value = atts.getValue(i);
+							html.append(' ');
+							html.append(attr);
+							html.append("=\"");
+							html.append(xmlEncode(value));
+							html.append("\"");
+						}
 					}
 					html.append('>');
 				}
@@ -356,13 +441,20 @@ public final class HTMLHighlighter {
 			try {
 				if (inIgnorableElement == 0) {
 					if (outputHighlightOnly) {
-						boolean highlight = contentBitSet
-								.get(characterElementIdx);
+						// boolean highlight = contentBitSet
+						// .get(characterElementIdx);
 
-						if (!highlight) {
-							return;
-						}
+						// if (!highlight) {
+						// return;
+						// }
 					}
+
+					if (tagWhitelist != null
+							&& !tagWhitelist.containsKey(qName)) {
+						// skip
+						return;
+					}
+
 					html.append("</");
 					html.append(qName);
 					html.append('>');
@@ -384,6 +476,7 @@ public final class HTMLHighlighter {
 				if (!highlight && outputHighlightOnly) {
 					return;
 				}
+
 				if (highlight) {
 					html.append(preHighlight);
 				}
@@ -430,4 +523,11 @@ public final class HTMLHighlighter {
 		return out.toString();
 	}
 
+	public Map<String, Set<String>> getTagWhitelist() {
+		return tagWhitelist;
+	}
+
+	public void setTagWhitelist(Map<String, Set<String>> tagWhitelist) {
+		this.tagWhitelist = tagWhitelist;
+	}
 }
