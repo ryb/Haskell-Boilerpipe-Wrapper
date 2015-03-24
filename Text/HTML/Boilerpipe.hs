@@ -28,5 +28,5 @@ boilerpipeFromJarPath boilerpipePath txt = do
 boilerpipe :: String -> IO (Maybe String)
 boilerpipe txt = do
     defaultJarPath <- getDataFileName
-        "boilerpipe-core/dist/boilerpipe-1.1-dev.jar"
+        "boilerpipe-core/dist/boilerpipe-1.2-dev.jar"
     boilerpipeFromJarPath defaultJarPath txt
