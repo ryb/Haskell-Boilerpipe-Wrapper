@@ -1,5 +1,7 @@
 Name:                Boilerpipe
-Version:             0.4.1
+Version:             0.5
+-- Synopsis:
+-- Description:
 License:             BSD3
 License-file:        LICENSE
 Author:              Ryan Burton
@@ -12,10 +14,12 @@ Data-Files: boilerpipe-core/dist/boilerpipe-1.2-dev.jar,
             boilerpipe-core/lib/xerces-2.9.1.jar
 Library
   Exposed-modules:     Text.HTML.Boilerpipe
-  Build-depends: base, 
-                 filepath, 
-                 process, 
-                 strict, 
-                 system-uuid, 
+
+  Build-depends: base,
+                 bytestring,
+                 filepath,
+                 process,
+                 strict,
+                 system-uuid,
                  temporary
   Other-modules: Paths_Boilerpipe
